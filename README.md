@@ -118,8 +118,13 @@ INSERT into users(first, last) values ('jane', 'doe');
 ```
 The database was already created as `docker` so we don't need to create it again nor do we need to check if it was created.  
 
-### Run server after database was created
-If you ran the docker container as is, you'd most likely get issues connecting to the db, mainly because the server is running before the postgres docker container is run.    
+### Run server after database is created
+If you ran the docker container as is, you'd most likely get issues connecting to the db, mainly because the server is running before the postgres docker container is run.  Something along the lines of ...
+```
+psql: could not connect to server: Connection refused
+    Is the server running on host "0.0.0.0" and accepting
+    TCP/IP connections on port 5432?
+```
 But wait.... Didn't we specify `depends_on` on the web container, which tells docker to run `db` first???  
 yes, that is true, but docker does not wait for `db` to finish running before running the web container `server`.  In order to wait for the db, we need to run a script that loops a timer until the db credentials are set.  
 
