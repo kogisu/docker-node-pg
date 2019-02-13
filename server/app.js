@@ -13,7 +13,7 @@ app.use(logger('dev'));
 
 //Static files
 app.use(express.static(path.join(__dirname, '../client/build')));
-app.use('/', express.static(path.join(__dirname, '../client/build')));
+app.use(express.static(path.join(__dirname, '../client/public')));
 
 //Request handling
 app.get('/api/users', async (req, res) => {

@@ -9,11 +9,6 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=docker
       - POSTGRES_PORT=5432
-      
-    volumes:
-      - ./:/app
-      - /app/client/build
-      - /app/node_modules
     depends_on: 
       - db
     ports:

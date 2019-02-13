@@ -1,0 +1,47 @@
+version: '2'
+services:
+  server:
+    build: .
+    image: docker-pg
+    environment:
+      - PORT=3000
+      - HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_PORT=5432
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    depends_on: 
+      - db
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+    command: ["./wait-for-it.sh", "db:5432", "--", "npm", "run", "dev-server"]
+  
+  db:
+    image: postgres
+    ports: 
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=docker
+    volumes:
+      - ./tmp:/docker-entrypoint-initdb.d
+
+  main-ui:
+    image: docker-pg
+    environment:
+      - PORT=3002
+    volumes:
+      - ./client/src/:/app/client/src
+      - /app/build
+      - /app/client/node_modules
+    expose:
+      - "3002"
+    ports:
+      - "3002:3002"
+    links:
+      - server
+    command: "npm run dev-client"
