@@ -6,6 +6,7 @@ Node app in docker container with postgres/ express / react integration
     - [Questions](#questions)
     - [Compose file](#compose-file)
     - [Properties](#properties)
+     - [running docker compose](#running-docker-compose-dev)
   - [Postgres](#postgres)
     - [Starting postgres](#starting-postgres)
     - [Seed db](#seed-db)
@@ -16,8 +17,14 @@ Node app in docker container with postgres/ express / react integration
     - [Differences](#differences)
     - [Main-ui](#main-ui-docker-service)
     - [Proxy](#proxy)
+    - [running docker compose dev](#running-docker-compose-dev)
   - [Using a corporate proxy](#using-a-corporate-proxy)
   - [Resources](#resources)
+    - [corporate proxy](#corporate-proxy)
+    - [building node app in docker & docker refs](building-node-app-in-docker--docker-refs)
+    - [debugging](#debugging)
+    - [networking](#networking)
+    - [postgres](#postgres)
     
 ## dockerfile
 This is the build step of docker image.  When running `docker build -t docker-node-pg:latest`, docker will run through the docker file run by line as if it is setting up the app and its' dependencies from scratch.  
@@ -102,6 +109,15 @@ There is some stuff we didn't mention before, so let's go through what all of th
 - `command` is the execution script to start the container.  This will start the app
 - `volumes` is how you mount volumes in the docker container or mount volumes from the container to the local machine.
 
+
+### Running docker compose
+```
+#In order to run the docker-compose file, run:    
+docker-compose up
+#To shut down the containers, run:
+docker-compose down
+```
+
 ## Postgres
 
 ### Starting postgres
@@ -157,7 +173,7 @@ The execution script is as follows:
  
 This executes the `.sh` file, sets the `host:port`, and then runs node.  
 
-## docker compose dev (development)
+## Docker compose dev (development)
 
 ### Questions
 Setting up the docker containers for development is more complex, but only by a little.  A couple things to know before we start:
@@ -217,7 +233,7 @@ services:
 ```
 This file is almost the same.  
 
-### differences
+### Differences
 Differences on `server`:
 1. `ports`: The first thing you notice is we changed the port mapping on the `server` from `3001:3000` to `3000:3000`.  This is just for simplicity.  Since the client will be hosted on it's own port, there is no need for port mapping on the server unless it's already being used on the host.  
 2. `command`: the last index value was changed from `start` to `dev-server`. This was not set to `dev-start` because we want to separate the run commands for the client and the server.
@@ -232,6 +248,15 @@ This is the client-side container created specifically to run react in `create-r
 ### Proxy
 the proxy is set in the client `package.json` file, where a property `proxy` is added.    
 In the `package.json`, we see `"proxy": "http://server:3000"`.  The `server` is not something built-in like `localhost`.  In fact, this is the service name of the web server container we set in the docker-compose file.  If we look back at it, we see the web service is named `server`.  If named `main-server`, we would change the proxy to `"proxy": "http://main-server:3000"`.  Note that the port set here is not the port of the client, but the port of express, since any requests on the client side need to route to the correct server port.  If the proxy is not provided, a cors (cross-origin-resource-sharing) error will occur.  
+
+### Running docker compose dev
+To run the development docker-compose file, we need to replace the production file in the docker-compose script.
+```
+#In order to run the docker-compose-dev file, run:    
+docker-compose -f docker-compose.yml -f docker-compose-dev.yml up
+#To shut down the containers, run:
+docker-compose down
+```
 
 ## Using a corporate proxy
 When using a corporate proxy, docker becomes a little tricky.  It may be that you may only install npm packages inside a docker container.  In order to do so, `npm` proxies need to be added to the `Dockerfile`.  
@@ -252,7 +277,12 @@ Sometimes, adding the proxy still does not enable you to download npm packages a
    - `docker build --network=host --build-arg HTTP_PROXY=<corporate_proxy>:<port> --build-arg HTTPS_PROXY=<corporate_proxy>:<port> -t docker-node-pg:latest . `
    
 ## Resources
+
+### corporate proxy
 - [configuring a corporate proxy](https://www.jhipster.tech/configuring-a-corporate-proxy/)
+- [corporate proxy debugging](https://stackoverflow.com/questions/7559648/is-there-a-way-to-make-npm-install-the-command-to-work-behind-proxy)
+
+### building node app in docker & docker refs
 - [Dockerfile best practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
 - [Dockerfile reference](https://docs.docker.com/engine/reference/builder/)
 - [Docker-compose for Nodejs](https://blog.codeship.com/using-docker-compose-for-nodejs-development/)
@@ -261,10 +291,20 @@ Sometimes, adding the proxy still does not enable you to download npm packages a
 - [Nodejs Dockerizing web-app](https://nodejs.org/en/docs/guides/nodejs-docker-webapp/)
 - [Docker bind-mounts](https://docs.docker.com/storage/bind-mounts/)
 - [Building a node app with docker](https://www.javascriptjanuary.com/blog/building-your-first-node-app-using-docker)
-- [live debugging docker](https://blog.docker.com/2016/07/live-debugging-docker/)
-- [live debugging docker with nodemon](https://github.com/Microsoft/vscode-recipes/tree/master/nodemon)
 - [Nodejs docker workflow](https://medium.com/datreeio/node-js-docker-workflow-b9d936c931e1)
 - [Exclude subdirectories in volumes](https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder)
+- [Separating compose files](https://serversforhackers.com/dockerized-app/compose-separated)
+
+### debugging
+- [live debugging docker](https://blog.docker.com/2016/07/live-debugging-docker/)
+- [live debugging docker with nodemon](https://github.com/Microsoft/vscode-recipes/tree/master/nodemon)
+
+### networking
 - [Networking in compose](https://docs.docker.com/compose/networking/)
 - [Basic networking in docker](https://runnable.com/docker/basic-docker-networking)
+
+### postgres
+- [docker postgres image](https://hub.docker.com/_/postgres)
+- [control postgres startup and shutdown](https://docs.docker.com/compose/startup-order/)
+- [persist postgres data in volume](https://stackoverflow.com/questions/41637505/how-to-persist-data-in-a-dockerized-postgres-database-using-volumes)
 
