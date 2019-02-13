@@ -1,6 +1,24 @@
-# docker-node-pg
+# Docker (Nodejs App with React and Express)
 Node app in docker container with postgres/ express / react integration
 
+  - [Dockerfile](#dockerfile)
+  - [Docker compose (production)](#docker-compose-production)
+    - [Questions](#questions)
+    - [Compose file](#compose-file)
+    - [Properties](#properties)
+  - [Postgres](#postgres)
+    - [Starting postgres](#starting-postgres)
+    - [Seed db](#seed-db)
+    - [Run server after database is created](#run-server-after-database-is-created)
+  - [Docker compose dev (development)](#docker-compose-dev-development)
+    - [Questions](#questions)
+    - [Compose file](#compose-file)
+    - [Differences](#differences)
+    - [Main-ui](#main-ui-docker-service)
+    - [Proxy](#proxy)
+  - [Using a corporate proxy](#using-a-corporate-proxy)
+  - [Resources](#resources)
+    
 ## dockerfile
 This is the build step of docker image.  When running `docker build -t docker-node-pg:latest`, docker will run through the docker file run by line as if it is setting up the app and its' dependencies from scratch.  
 
@@ -19,7 +37,9 @@ COPY . .
 CMD "npm start"
 ```
 
-## docker-compose.yml (production)
+## docker compose (production)
+
+### Questions
 A list of things we need to know before all of this is configured...
 1. What are the credentials for the postgres db (username, password, host, port)?
    - For postgres, we add environment variables `POSTGRES_USER`, `POSTGRES_PASSWORD`, `HOST`, `POSTGRES_PORT`, where...
@@ -39,6 +59,8 @@ A list of things we need to know before all of this is configured...
    - This is done through the bridge network.  By default, all services on a `docker-compose.yml` are connected through a bridge network.  This can be changed to a different network type, but for this case, a bridge network will work best.  The way we can connect the web container to the db container is by using `HOST` mentioned before.  By naming the postgres container `db`, we are specifying the host of the postgres container to be `db`.  This hostname can be used in other containers by adding a property on the web container `depends_on` to `db`.  
    
 Now that we have all the info we need for this, we can get started on the `docker-compose` file...
+
+### Compose file
 ```
 #Docker-compose.yml (production)
 version: '2'
@@ -135,7 +157,9 @@ The execution script is as follows:
  
 This executes the `.sh` file, sets the `host:port`, and then runs node.  
 
-## docker-compose-dev.yml (development)
+## docker compose dev (development)
+
+### Questions
 Setting up the docker containers for development is more complex, but only by a little.  A couple things to know before we start:
 1. Is the client also listening on a port? 
    - If you are using `create-react-app`, yes.  `npm start` on a `react-app` will open a port and listen on it.  It defaults at port 3000, so if express is listening on this port, the port needs to be changed to something else.  If using webpack, no additional port is opened.  
@@ -144,6 +168,7 @@ Setting up the docker containers for development is more complex, but only by a 
 3. How do we set the proxy for the client?
    - This is done in the `package.json`.  We will go in more detail later
 
+### Compose file
 ```
 version: '2'
 services:
@@ -191,11 +216,12 @@ services:
 ```
 This file is almost the same.  
 
+### differences
 Differences on `server`:
 1. `ports`: The first thing you notice is we changed the port mapping on the `server` from `3001:3000` to `3000:3000`.  This is just for simplicity.  Since the client will be hosted on it's own port, there is no need for port mapping on the server unless it's already being used on the host.  
 2. `command`: the last index value was changed from `start` to `dev-server`. This was not set to `dev-start` because we want to separate the run commands for the client and the server.
 
-### Main-ui (docker service)
+### Main ui (docker service)
 This is the client-side container created specifically to run react in `create-react-app`.  If `create-react-app` was not used, a different approach will be used.  
 - `image` used is the same image used in the server container.  A different image container may have been created, but for simplicity, it is not required. This is only for a dev setup, and it works.
 - `environment` sets the port to `3002`.  This is not to be confused with the express port.  This the port that remaps `react-app` `npm start` port from 3000 to 3002.  This is required or the app will run on port 3000.  
@@ -218,6 +244,12 @@ Also, certificates may also be required.  Add..
 Then, set the certificates file as `cafile`:    
 `RUN npm config set cafile /root/certificates_name.cer`
 
+Sometimes, adding the proxy still does not enable you to download npm packages at docker build time.  In order to fix this issue, there are a couple of fixes.  
+1. Add `--build-arg` arguments for the proxies during the `docker build` step.
+   - `docker build --build-arg HTTP_PROXY=<corporate_proxy>:<port> --build-arg HTTPS_PROXY=<corporate_proxy>:<port> -t docker-node-pg:latest . `
+2. If this issue persists, add `--network=host`.
+   - `docker build --network=host --build-arg HTTP_PROXY=<corporate_proxy>:<port> --build-arg HTTPS_PROXY=<corporate_proxy>:<port> -t docker-node-pg:latest . `
+   
 ## Resources
 - [configuring a corporate proxy](https://www.jhipster.tech/configuring-a-corporate-proxy/)
 - [Dockerfile best practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
