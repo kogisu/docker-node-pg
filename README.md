@@ -170,6 +170,7 @@ Setting up the docker containers for development is more complex, but only by a 
 
 ### Compose file
 ```
+#Docker-compose-dev.yml (development)
 version: '2'
 services:
   server:
