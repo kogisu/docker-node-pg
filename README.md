@@ -97,6 +97,8 @@ EOSQL
 ```
 This is not a shell scripting tutorial, so I will not go over this.  All this does is create default credentials superUser `docker` (no password required) and database `docker`.  It will also add additional credentials to the postgres db with the credentials provided in the `environment` property of the `docker-compose.yml` file.   
 
+`POSTGRES_USER` and `POSTGRES_PASSWORD` are also added to the postgres docker container exclusively for the start script above and utilized as variables.  
+
 ### Seed db
 As mentioned above, anything added in the mounted volume to `/docker-entrypoint-initdb.d` will be executed, including `*.sql`, `*.sql.gz`, or `*.sh` will be run.  So we add our `schema.sql` file in the directory.       
 
@@ -124,9 +126,95 @@ yes, that is true, but docker does not wait for `db` to finish running before ru
 A `wait-for-it.sh` file was added to the root directory of the app.  This file is provided by the `postgres` open source community, and can be copied from [wait-for-it script](https://github.com/vishnubob/wait-for-it).  For more info see [control postgres startup and shutdown](https://docs.docker.com/compose/startup-order/).  
 Once the file is copied, an execution command needs to be provided to the server container, which will start the node app when and only when the db is created.  
 The execution script is as follows:   
- - `command: ["./wait-for-it.sh", "db:5432", "--", "npm", "run", "start"]`  
+ - `command: ["./wait-for-it.sh", "db:5432", "--", "npm", "run", "start"]`    
+ 
 This executes the `.sh` file, sets the `host:port`, and then runs node.  
 
+## docker-compose-dev.yml (development)
+Setting up the docker containers for development is more complex, but only by a little.  A couple things to know before we start:
+1. Is the client also listening on a port? 
+   - If you are using `create-react-app`, yes.  `npm start` on a `react-app` will open a port and listen on it.  It defaults at port 3000, so if express is listening on this port, the port needs to be changed to something else.  If using webpack, no additional port is opened.  
+2. What build directory are we serving up and where is it located?
+   - In development, we want to listen to any client code changes, so we use `npm start`.  This will build a `build` directory in the root directory.  If production, it will build the directory in the `./client` directory.
+3. How do we set the proxy for the client?
+   - This is done in the `package.json`.  We will go in more detail later
 
+```
+version: '2'
+services:
+  server:
+    build: .
+    image: docker-pg
+    environment:
+      - PORT=3000
+      - HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_PORT=5432
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    depends_on: 
+      - db
+    ports:
+      - "3000:3000"
+    command: ["./wait-for-it.sh", "db:5432", "--", "npm", "run", "dev-server"]
+  
+  db:
+    image: postgres
+    ports: 
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=docker
+    volumes:
+      - ./tmp:/docker-entrypoint-initdb.d
 
+  main-ui:
+    image: docker-pg
+    environment:
+      - PORT=3002
+    volumes:
+      - ./client/src/:/app/client/src
+      - /app/build
+      - /app/client/node_modules
+    ports:
+      - "3002:3002"
+    links:
+      - server
+    command: "npm run dev-client"
+```
+This file is almost the same.  
+
+Differences on `server`:
+1. `ports`: The first thing you notice is we changed the port mapping on the `server` from `3001:3000` to `3000:3000`.  This is just for simplicity.  Since the client will be hosted on it's own port, there is no need for port mapping on the server unless it's already being used on the host.  
+2. `command`: the last index value was changed from `start` to `dev-server`. This was not set to `dev-start` because we want to separate the run commands for the client and the server.
+
+### Main-ui (docker service)
+This is the client-side container created specifically to run react in `create-react-app`.  If `create-react-app` was not used, a different approach will be used.  
+- `image` used is the same image used in the server container.  A different image container may have been created, but for simplicity, it is not required. This is only for a dev setup, and it works.
+- `environment` sets the port to `3002`.  This is not to be confused with the express port.  This the port that remaps `react-app` `npm start` port from 3000 to 3002.  This is required or the app will run on port 3000.  
+- `ports` is set to any available port `3002:3002`
+- `links`: we add `- server` to add a networking link between the web and server.  This is so that any fetch requests to the express server may use a proxy. 
+
+### Proxy
+the proxy is set in the client `package.json` file, where a property `proxy` is added.    
+In the `package.json`, we see `"proxy": "http://server:3000"`.  The `server` is not something built-in like `localhost`.  In fact, this is the service name of the web server container we set in the docker-compose file.  If we look back at it, we see the web service is named `server`.  If named `main-server`, we would change the proxy to `"proxy": "http://main-server:3000"`.  Note that the port set here is not the port of the client, but the port of express, since any requests on the client side need to route to the correct server port.  If the proxy is not provided, a cors (cross-origin-resource-sharing) error will occur.  
+
+## Resources
+- [configuring a corporate proxy](https://www.jhipster.tech/configuring-a-corporate-proxy/)
+- [Dockerfile best practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
+- [Dockerfile reference](https://docs.docker.com/engine/reference/builder/)
+- [Docker-compose for Nodejs](https://blog.codeship.com/using-docker-compose-for-nodejs-development/)
+- [MERN app docker](https://medium.com/codebase/mern-ep01-setting-up-a-development-environment-with-docker-1bb0b6e4d464)
+- [Docker Development with Nodemon](https://medium.com/lucjuggery/docker-in-development-with-nodemon-d500366e74df)
+- [Nodejs Dockerizing web-app](https://nodejs.org/en/docs/guides/nodejs-docker-webapp/)
+- [Docker bind-mounts](https://docs.docker.com/storage/bind-mounts/)
+- [Building a node app with docker](https://www.javascriptjanuary.com/blog/building-your-first-node-app-using-docker)
+- [live debugging docker](https://blog.docker.com/2016/07/live-debugging-docker/)
+- [live debugging docker with nodemon](https://github.com/Microsoft/vscode-recipes/tree/master/nodemon)
+- [Nodejs docker workflow](https://medium.com/datreeio/node-js-docker-workflow-b9d936c931e1)
+- [Exclude subdirectories in volumes](https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder)
+- [Networking in compose](https://docs.docker.com/compose/networking/)
+- [Basic networking in docker](https://runnable.com/docker/basic-docker-networking)
 
