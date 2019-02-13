@@ -281,7 +281,6 @@ Sometimes, adding the proxy still does not enable you to download npm packages a
 ### corporate proxy
 - [configuring a corporate proxy](https://www.jhipster.tech/configuring-a-corporate-proxy/)
 - [corporate proxy debugging](https://stackoverflow.com/questions/7559648/is-there-a-way-to-make-npm-install-the-command-to-work-behind-proxy)
-
 ### building node app in docker & docker refs
 - [Dockerfile best practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
 - [Dockerfile reference](https://docs.docker.com/engine/reference/builder/)
@@ -294,15 +293,12 @@ Sometimes, adding the proxy still does not enable you to download npm packages a
 - [Nodejs docker workflow](https://medium.com/datreeio/node-js-docker-workflow-b9d936c931e1)
 - [Exclude subdirectories in volumes](https://stackoverflow.com/questions/29181032/add-a-volume-to-docker-but-exclude-a-sub-folder)
 - [Separating compose files](https://serversforhackers.com/dockerized-app/compose-separated)
-
 ### debugging
 - [live debugging docker](https://blog.docker.com/2016/07/live-debugging-docker/)
 - [live debugging docker with nodemon](https://github.com/Microsoft/vscode-recipes/tree/master/nodemon)
-
 ### networking
 - [Networking in compose](https://docs.docker.com/compose/networking/)
 - [Basic networking in docker](https://runnable.com/docker/basic-docker-networking)
-
 ### postgres
 - [docker postgres image](https://hub.docker.com/_/postgres)
 - [control postgres startup and shutdown](https://docs.docker.com/compose/startup-order/)
