@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(logger('dev'));
 
 //Static files
-app.use(express.static(path.join(__dirname, '../client/build')));
+app.use(express.static(path.join(__dirname, '../build')));
 app.use(express.static(path.join(__dirname, '../client/public')));
 
 //Request handling

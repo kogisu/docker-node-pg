@@ -14,8 +14,6 @@ services:
       - /app/node_modules
     depends_on: 
       - db
-    expose:
-      - "3000"
     ports:
       - "3000:3000"
     command: ["./wait-for-it.sh", "db:5432", "--", "npm", "run", "dev-server"]
@@ -38,8 +36,6 @@ services:
       - ./client/src/:/app/client/src
       - /app/build
       - /app/client/node_modules
-    expose:
-      - "3002"
     ports:
       - "3002:3002"
     links:
