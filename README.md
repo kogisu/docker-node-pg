@@ -206,6 +206,18 @@ This is the client-side container created specifically to run react in `create-r
 the proxy is set in the client `package.json` file, where a property `proxy` is added.    
 In the `package.json`, we see `"proxy": "http://server:3000"`.  The `server` is not something built-in like `localhost`.  In fact, this is the service name of the web server container we set in the docker-compose file.  If we look back at it, we see the web service is named `server`.  If named `main-server`, we would change the proxy to `"proxy": "http://main-server:3000"`.  Note that the port set here is not the port of the client, but the port of express, since any requests on the client side need to route to the correct server port.  If the proxy is not provided, a cors (cross-origin-resource-sharing) error will occur.  
 
+## Using a corporate proxy
+When using a corporate proxy, docker becomes a little tricky.  It may be that you may only install npm packages inside a docker container.  In order to do so, `npm` proxies need to be added to the `Dockerfile`.  
+Right after the `From Node:10` line, add:   
+```
+RUN npm config set proxy http://<company_proxy>:<port>
+RUN npm config set https-proxy http://<company_proxy>:<port>
+```
+Also, certificates may also be required.  Add..
+`ADD <location/of/certificates_name.cer> /root/certificates_name.cer` This adds the certificates to the root directory of the container.   
+Then, set the certificates file as `cafile`:    
+`RUN npm config set cafile /root/certificates_name.cer`
+
 ## Resources
 - [configuring a corporate proxy](https://www.jhipster.tech/configuring-a-corporate-proxy/)
 - [Dockerfile best practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
