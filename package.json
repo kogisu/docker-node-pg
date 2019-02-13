@@ -1,0 +1,27 @@
+{
+    "name": "",
+    "version": "1.0.0",
+    "description": "",
+    "main": "server/app.js",
+    "scripts": {
+        "server": "node server/app.js",
+        "dev-server": "nodemon server/app.js",
+        "client": "npm run build --prefix client",
+        "dev-client": "npm start --prefix client",
+        "start": "npm run client && npm run server",
+        "dev": "concurrently \"npm run dev-server\" \"npm run dev-client\""
+    },
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "concurrently": "^4.1.0",
+        "create-react-app": "^2.1.5",
+        "express": "^4.16.4",
+        "morgan": "^1.9.1",
+        "path": "^0.12.7",
+        "pg": "^7.8.0"
+    },
+    "devDependencies": {
+        "nodemon": "^1.18.10"
+    }
+}
