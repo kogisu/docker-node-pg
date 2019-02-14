@@ -15,6 +15,9 @@ Node app in docker container with postgres/ express / react integration
     - [Interest points](#interest-points)
     - [Compose file](#compose-file)
     - [Main-ui](#main-ui-docker-service)
+    - [Volumes](#volumes)
+      - [Creating a volume that only exists in the container](#Creating-a-volume-that-only-exists-in-the-container)
+      - [Creating a volume and mounting the volume to the host](#Creating-a-volume-and-mounting-the-volume-to-the-host)
     - [Proxy](#proxy)
     - [running docker compose dev](#running-docker-compose-dev)
   - [Using a corporate proxy](#using-a-corporate-proxy)
@@ -242,6 +245,48 @@ This is the client-side container created specifically to run react in `create-r
 - `environment` sets the port to `3002`.  This is not to be confused with the express port.  This the port that remaps `react-app` `npm start` port from 3000 to 3002.  This is required or the app will run on port 3000.  
 - `ports` is set to any available port `3002:3002`
 - `links` bridges `- server` to add a networking link between the web and server.  This is so that any fetch requests to the express server may use a proxy instead of full http paths. 
+
+### Volumes
+volumes is mostly only used in development versions of docker containers, only to see in real-time the changes made in code.  In Nodejs, the code changes will be hot-reloaded through `nodemon`, and in Reactjs the code changes will be hot reloaded by react-app or through `webpack --watch`.  
+
+In volumes, there are two methods of creation. 
+1. Creating a volume that exists only in the container
+2. Creating a volume and mounting the volume to the host
+
+##### Creating a volume that only exists in the container
+This is done using the syntax   
+```
+volumes: 
+  - /some/dir/in/the/container
+  - /some/file/in/the/container.txt
+```
+Note above that you can mount a file or a directory.  This will create a volume within the container to persist changes in code and is only persisted in the container, not the image.  If the image is rebuilt, the resulting app would revert to the previous state.  This method is only used for cases like having a separate directory than the host, or ignoring a particular directory to be copied over from the host if mounting the entire root directory.  
+For example, in the `docker-compose-dev` file, we see in the server container
+```
+volumes:
+  - ./:/app
+  - /app/node_modules
+```
+Here, we see two mounted volumes.  We will go over the first later `./:/app`.  The second however, is the volume mounted in the container only.  node_modules are mounted in the container so that when `npm install <package>` is run inside the container, the node_modules directory is updated and not affected on the host machine.  We want these two to be separate.  The only things we want changed on the host is everything else (such as the code, package.json, schema, etc).
+
+##### Creating a volume and mounting the volume to the host
+In order to mount a volume to the host machine as seen above, we use the syntax
+```
+volumes: 
+  - ./some/dir/in/the/host:/some/dir/in/the/container
+  - ./some/file/in/the/host.txt:/some/file/in/the/container.txt
+```
+Note above that you can also mount a file or a directory to the host machine.  Going back to the previously mentioned volume `./:/app`, we notice that the entire app is provided as a mounted volume.  That means any changes to anything in the app code base should reflect on the container (assuming nodemon, webpack --watch, server-dev, etc) is run.  If only this one line is provided, an error will occur when building the app. For volumes to be used, the host and container need to match up completely (unless some things are ignored).  If npm packages are installed during the `docker build` step, then npm packages on the host machine must match this.  `Volumes` copy anything specified from the container to the host, and vice-versa.  Since we don't want to copy node_modules, we ignore this.  That is why we provided node_modules as an exclusive volume in the container, so that anything on the container would not reflect on the host, and vice-versa.  We can use this same method for anything else we want to ignore.  
+
+Similarly, for rebuilding the client-side code, webpack rebuilds the app in a bundled file.  When running docker, this only runs when `src` code in the container is detected, not the host.  If you've been following the convention, that means the `/src` directory needs to be mounted as well.  But we don't just want to mount this on the container, we want to mount this to the host so that any changes made on the host will also result in changes on the container, triggering webpack to rebuild the app.  For this, we add 
+```
+volumes:
+  - ./client/src/:/app/client/src
+  - /app/build
+  - /app/client/node_modules
+```
+Here we see the `/src` directory mounted, as well as `/node_modules` and `/build`.  But why `/build`??
+We mouted this on the container only because the rebuilding is only happening on the container.
 
 ### Proxy
 the proxy is set in the client `package.json` file, where a property `proxy` is added.    
