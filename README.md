@@ -20,6 +20,7 @@ Node app in docker container with postgres/ express / react integration
       - [Creating a volume and mounting the volume to the host](#Creating-a-volume-and-mounting-the-volume-to-the-host)
     - [Proxy](#proxy)
     - [running docker compose dev](#running-docker-compose-dev)
+  - [Docker compose dev (without 'create react app')](#docker-compose-dev-without-create-react-app)
   - [Using a corporate proxy](#using-a-corporate-proxy)
   - [Resources](#resources)
     - [corporate proxy](#corporate-proxy)
@@ -308,6 +309,42 @@ docker-compose -f docker-compose.yml -f docker-compose-dev.yml up
 #To shut down the containers, run:
 docker-compose down
 ```
+
+## Docker compose dev (without 'create react app')
+```
+#Docker-compose-dev.yml (development)
+version: '2'
+services:
+  server:
+    build: .
+    image: docker-pg
+    environment:
+      - PORT=3000
+      - HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_PORT=5432
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/build
+    depends_on: 
+      - db
+    ports:
+      - "3000:3000"
+    command: ["./wait-for-it.sh", "db:5432", "--", "npm", "run", "dev-start"]
+  
+  db:
+    image: postgres
+    ports: 
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=docker
+    volumes:
+      - ./tmp:/docker-entrypoint-initdb.d
+```
+Since webpack does not open another port, we don't need to separate the client and server.  This makes things super simple.  All we did here is add a volume `- /app/build` to the server, and change the exec command to run `both nodemon` and `webpack --watch` through `npm run dev-start`.  Note that this solution will not work for this app since we are not using a `webpack.config` file.    
 
 ## Using a corporate proxy
 When using a corporate proxy, docker becomes a little tricky.  It may be that you may only install npm packages inside a docker container.  In order to do so, `npm` proxies need to be added to the `Dockerfile`.  
