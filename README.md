@@ -3,7 +3,7 @@ Node app in docker container with postgres/ express / react integration
 
   - [Dockerfile](#dockerfile)
   - [Docker compose (production)](#docker-compose-production)
-    - [Questions](#questions)
+    - [Interest points](#interest-points)
     - [Compose file](#compose-file)
     - [Properties](#properties)
      - [running docker compose](#running-docker-compose-dev)
@@ -12,7 +12,7 @@ Node app in docker container with postgres/ express / react integration
     - [Seed db](#seed-db)
     - [Run server after database is created](#run-server-after-database-is-created)
   - [Docker compose dev (development)](#docker-compose-dev-development)
-    - [Questions](#questions)
+    - [Interest points](#interest-points)
     - [Compose file](#compose-file)
     - [Main-ui](#main-ui-docker-service)
     - [Proxy](#proxy)
@@ -26,7 +26,7 @@ Node app in docker container with postgres/ express / react integration
     - [postgres](#postgres)
     
 ## dockerfile
-This is the build step of docker image.  When running `docker build -t docker-node-pg:latest`, docker will run through the docker file run by line as if it is setting up the app and its' dependencies from scratch.  
+This is the build step of the docker image.  When running `docker build -t docker-node-pg:latest`, docker will run through the docker file line by line as if it were setting up the app and its' dependencies from scratch.  This is what makes docker similar to a VM (virtual machine).  
 
 ```
 # starting point.  Runs all commands from a node image (from dockerhub)
@@ -45,7 +45,7 @@ CMD "npm start"
 
 ## docker compose (production)
 
-### Questions
+### Interest points
 A list of things we need to know before all of this is configured...
 1. What are the credentials for the postgres db (username, password, host, port)?
    - For postgres, we add environment variables `POSTGRES_USER`, `POSTGRES_PASSWORD`, `HOST`, `POSTGRES_PORT`, where...
@@ -174,7 +174,7 @@ This executes the `.sh` file, sets the `host:port`, and then runs node.
 
 ## Docker compose dev (development)
 
-### Questions
+### Interest points
 Setting up the docker containers for development is more complex, but only by a little.  A few things to know before we start:
 1. Is the client also listening on a port? 
    - If you are using `create-react-app`, yes.  `npm start` on a `react-app` will open a port and listen on it.  It defaults at port 3000, so if express is listening on this port, the port needs to be changed to something else.  If using `webpack --watch`, no additional port is opened, and no additional container is required.
