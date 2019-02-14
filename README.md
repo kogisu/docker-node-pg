@@ -53,10 +53,10 @@ CMD "npm start"
 A list of things we need to know before all of this is configured...
 1. What are the credentials for the postgres db (username, password, host, port)?
    - For postgres, we add environment variables `POSTGRES_USER`, `POSTGRES_PASSWORD`, `HOST`, `POSTGRES_PORT`, where...
-   - `POSTGRES_USER=postgres` // This can be anything
-   - `POSTGRES_PASSWORD=docker` // This can be anything
-   - `HOST=db` // This is important... It is the name of the service that the postgres docker container is created from
-   - `POSTGRES_PORT=5432` // This is by convention
+     - `POSTGRES_USER=postgres` // This can be anything
+     - `POSTGRES_PASSWORD=docker` // This can be anything
+     - `HOST=db` // This is important... It is the name of the service that the postgres docker container is created from
+     - `POSTGRES_PORT=5432` // This is by convention
 2. What port is the server listening on?
    -  `PORT=3000` // This can be anything, as long as it is not already used on the host.  
 3. How do we start the postgres db (createdb, add our credentials)?
@@ -106,7 +106,7 @@ There is some stuff we didn't mention before, so let's go through what all of th
 - `server` is the service container name
 - `build` is the context where the docker image is built.  If `.`, then this means root of the directory
 - `image` is the image name when it is created
-- `environment` is a list of environment variables available to the container, and is automatically provided through `process.env`
+- `environment` is a list of environment variables available to the container, and is automatically provided through process.env
 - `depends_on` was mentioned before, but it is how we link the web container to the db container.  The web container depends on the db.  
 - `ports` is how we add port mapping.  This is not to be confused with port exposing.  "3001:3000" means that port 3001 will be used on the host machine where the docker container listens on port 3000.  Exposing is not required unless you want to connect these containers with containers outside of the network.
 - `command` is the execution script to start the container.  This will start the app
@@ -114,7 +114,7 @@ There is some stuff we didn't mention before, so let's go through what all of th
 
 
 ### Running docker compose
-```
+```bash
 #In order to run the docker-compose file, run:    
 docker-compose up
 #To shut down the containers, run:
@@ -178,7 +178,7 @@ yes, that is true, but docker does not wait for `db` to finish running before ru
 A `wait-for-it.sh` file is added to the root directory of the app.  This file is provided by the `postgres` open source community, and can be copied from [wait-for-it script](https://github.com/vishnubob/wait-for-it).  For more info see [control postgres startup and shutdown](https://docs.docker.com/compose/startup-order/).  
 Once the file is copied, an execution command needs to be provided to the server container, which will start the node app when and only when the db is created.  
 The execution script is as follows:   
- - `command: ["./wait-for-it.sh", "db:5432", "--", "npm", "run", "start"]`    
+`command: ["./wait-for-it.sh", "db:5432", "--", "npm", "run", "start"]`    
  
 This executes the `.sh` file, sets the `host:port`, and then runs node.  
 
@@ -269,7 +269,7 @@ volumes:
 ```
 Note above that you can mount a file or a directory.  This will create a volume within the container to persist changes in code and is only persisted in the container, not the image.  If the image is rebuilt, the resulting app would revert to the previous state.  This method is only used for cases like having a separate directory than the host, or ignoring a particular directory to be copied over from the host if mounting the entire root directory.  
 For example, in the `docker-compose-dev` file, we see in the server container
-```
+```yaml
 volumes:
   - ./:/app
   - /app/node_modules
@@ -303,7 +303,7 @@ In the `package.json`, we see `"proxy": "http://server:3000"`.  The `server` is 
 
 ### Running docker compose dev
 To run the development docker-compose file, we need to replace the production file in the docker-compose script.
-```
+```bash
 #In order to run the docker-compose-dev file, run:    
 docker-compose -f docker-compose.yml -f docker-compose-dev.yml up
 #To shut down the containers, run:
