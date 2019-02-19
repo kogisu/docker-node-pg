@@ -32,13 +32,13 @@ Node app in docker container with postgres/ express / react integration
     - [postgreSQL](#postgresql)
 
 ## Start the app
-```
+```bash
 #run in production
-docker-compose up
+$ docker-compose up
 #run in development
-#docker-compose -f docker-compose-dev.yml
+$ docker-compose -f docker-compose-dev.yml
 #stop containers/app
-docker-compose down --remove-orphans
+$ docker-compose down --remove-orphans
 ```
 
 ## dockerfile
