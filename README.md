@@ -1,6 +1,8 @@
 # Docker (Nodejs App with React and Express)
 Node app in docker container with postgres/ express / react integration
 
+## Table of Contents
+  - [Start the app](#start-the-app)
   - [Dockerfile](#dockerfile)
   - [Docker compose (production)](#docker-compose-production)
     - [Interest points](#interest-points)
@@ -28,7 +30,17 @@ Node app in docker container with postgres/ express / react integration
     - [debugging](#debugging)
     - [networking](#networking)
     - [postgreSQL](#postgresql)
-    
+
+## Start the app
+```
+#run in production
+docker-compose up
+#run in development
+#docker-compose -f docker-compose-dev.yml
+#stop containers/app
+docker-compose down --remove-orphans
+```
+
 ## dockerfile
 This is the build step of the docker image.  When running `docker build -t docker-node-pg:latest`, docker will run through the docker file line by line as if it were setting up the app and its' dependencies from scratch.  This is what makes docker similar to a VM (virtual machine).  
 
