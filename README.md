@@ -251,14 +251,14 @@ This is the client-side container created specifically to run react in `create-r
 - `image` is the image name created for the server container.  A different image container may have been created, but for simplicity, it is not required. This is only for a dev setup fir listening to changes after all.
 - `environment` sets the port to `3002`.  This is not to be confused with the express port.  This the port that remaps `react-app` `npm start` port from 3000 to 3002.  This is required or the app will run on port 3000.  
 - `ports` is set to any available port `3002:3002`
-- `links` bridges `- server` to add a networking link between the web and server.  This is so that any fetch requests to the express server may use a proxy instead of full http paths. 
+- `links` bridges `- server` to add a networking link between the client-side container and the server-side container.  This is so that any fetch requests to the express server from the client may use a proxy instead of the full http path (ex: `fetch('/info')` instead of `fetch('http://localhost:3000/info')`. 
 
 ### Volumes
 volumes is mostly only used in development versions of docker containers, only to see in real-time the changes made in code.  In Nodejs, the code changes will be hot-reloaded through `nodemon`, and in Reactjs the code changes will be hot reloaded by react-app or through `webpack --watch`.  
 
 In volumes, there are two methods of creation. 
-1. Creating a volume that exists only in the container
-2. Creating a volume and mounting the volume to the host
+1. Mounting a volume that exists only in the container
+2. Mounting a volume to the container and binding to the host
 
 ##### Mounting a volume that only exists in the container
 This is done using the syntax   
