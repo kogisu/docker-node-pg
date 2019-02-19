@@ -4,7 +4,7 @@ Node app in docker container with postgres/ express / react integration
   - [Dockerfile](#dockerfile)
   - [Docker compose (production)](#docker-compose-production)
     - [Interest points](#interest-points)
-    - [Compose file](#compose-file)
+    - [Compose file for production](#compose-file-for-production)
     - [Properties](#properties)
      - [running docker compose](#running-docker-compose-dev)
   - [Postgres](#postgres)
@@ -12,12 +12,12 @@ Node app in docker container with postgres/ express / react integration
     - [Seed db](#seed-db)
     - [Run server after database is created](#run-server-after-database-is-created)
   - [Docker compose dev (development)](#docker-compose-dev-development)
-    - [Interest points](#interest-points)
-    - [Compose file](#compose-file)
+    - [Dev Interest points](#dev-interest-points)
+    - [Compose file for development](#compose-file-for-development)
     - [Main-ui](#main-ui-docker-service)
     - [Volumes](#volumes)
-      - [Creating a volume that only exists in the container](#Creating-a-volume-that-only-exists-in-the-container)
-      - [Creating a volume and mounting the volume to the host](#Creating-a-volume-and-mounting-the-volume-to-the-host)
+      - [Mounting a volume that only exists in the container](#mounting-a-volume-that-only-exists-in-the-container)
+      - [Mounting a volume to the container and binding to the host](#mounting-a-volume-to-the-container-and-binding-to-the-host)
     - [Proxy](#proxy)
     - [running docker compose dev](#running-docker-compose-dev)
   - [Docker compose dev (without 'create react app')](#docker-compose-dev-without-create-react-app)
@@ -27,7 +27,7 @@ Node app in docker container with postgres/ express / react integration
     - [building node app in docker & docker refs](building-node-app-in-docker--docker-refs)
     - [debugging](#debugging)
     - [networking](#networking)
-    - [postgres](#postgres)
+    - [postgreSQL](#postgresql)
     
 ## dockerfile
 This is the build step of the docker image.  When running `docker build -t docker-node-pg:latest`, docker will run through the docker file line by line as if it were setting up the app and its' dependencies from scratch.  This is what makes docker similar to a VM (virtual machine).  
@@ -70,7 +70,7 @@ A list of things we need to know before all of this is configured...
    
 Now that we have all the info we need for this, we can get started on the `docker-compose` file...
 
-### Compose file
+### Compose file for production
 ```yaml
 #Docker-compose.yml (production)
 version: '2'
@@ -184,7 +184,7 @@ This executes the `.sh` file, sets the `host:port`, and then runs node.
 
 ## Docker compose dev (development)
 
-### Interest points
+### Dev Interest points
 Setting up the docker containers for development is more complex, but only by a little.  A few things to know before we start:
 1. Is the client also listening on a port? 
    - If you are using `create-react-app`, yes.  `npm start` on a `react-app` will open a port and listen on it.  It defaults at port 3000, so if express is listening on this port, the port needs to be changed to something else.  If using `webpack --watch`, no additional port is opened, and no additional container is required.
@@ -193,7 +193,7 @@ Setting up the docker containers for development is more complex, but only by a 
 3. How do we set the proxy for the client?
    - This is done in the `package.json`.  We will go in more detail later
 
-### Compose file
+### Compose file for development
 ```yaml
 #Docker-compose-dev.yml (development)
 version: '2'
@@ -260,7 +260,7 @@ In volumes, there are two methods of creation.
 1. Creating a volume that exists only in the container
 2. Creating a volume and mounting the volume to the host
 
-##### Creating a volume that only exists in the container
+##### Mounting a volume that only exists in the container
 This is done using the syntax   
 ```yaml
 volumes: 
@@ -276,7 +276,7 @@ volumes:
 ```
 Here, we see two mounted volumes.  We will go over the first later `./:/app`.  The second however, is the volume mounted in the container only.  node_modules are mounted in the container so that when `npm install <package>` is run inside the container, the node_modules directory is updated and not affected on the host machine.  We want these two to be separate.  The only things we want changed on the host is everything else (such as the code, package.json, schema, etc).
 
-##### Creating a volume and mounting the volume to the host
+##### Mounting a volume to the container and binding to the host
 In order to mount a volume to the host machine as seen above, we use the syntax
 ```yaml
 volumes: 
@@ -305,10 +305,11 @@ In the `package.json`, we see `"proxy": "http://server:3000"`.  The `server` is 
 To run the development docker-compose file, we need to replace the production file in the docker-compose script.
 ```bash
 #In order to run the docker-compose-dev file, run:    
-docker-compose -f docker-compose.yml -f docker-compose-dev.yml up
+docker-compose -f docker-compose-dev.yml up
 #To shut down the containers, run:
 docker-compose down
 ```
+The `-f` flag in the `docker-compose up` command specifies an alternate file to be used instead of the `docker-compose.yml` file.  
 
 ## Docker compose dev (without 'create react app')
 ```yaml
@@ -388,7 +389,7 @@ Sometimes, adding the proxy still does not enable you to download npm packages a
 ### networking
 - [Networking in compose](https://docs.docker.com/compose/networking/)
 - [Basic networking in docker](https://runnable.com/docker/basic-docker-networking)
-### postgres
+### postgreSQL
 - [docker postgres image](https://hub.docker.com/_/postgres)
 - [control postgres startup and shutdown](https://docs.docker.com/compose/startup-order/)
 - [persist postgres data in volume](https://stackoverflow.com/questions/41637505/how-to-persist-data-in-a-dockerized-postgres-database-using-volumes)
