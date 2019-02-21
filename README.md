@@ -20,6 +20,7 @@ Node app in docker container with postgres/ express / react integration
     - [Volumes](#volumes)
       - [Mounting a volume that only exists in the container](#mounting-a-volume-that-only-exists-in-the-container)
       - [Mounting a volume to the container and binding to the host](#mounting-a-volume-to-the-container-and-binding-to-the-host)
+    - [Live debugging](#live-debugging)
     - [Proxy](#proxy)
     - [running docker compose dev](#running-docker-compose-dev)
   - [Docker compose dev (without 'create react app')](#docker-compose-dev-without-create-react-app)
@@ -358,6 +359,30 @@ services:
       - ./tmp:/docker-entrypoint-initdb.d
 ```
 Since webpack does not open another port, we don't need to separate the client and server.  This makes things super simple.  All we did here is add a volume `- /app/build` to the server, and change the exec command to run `both nodemon` and `webpack --watch` through `npm run dev-start`.  Note that this solution will not work for this app since we are not using a `webpack.config` file.    
+
+### Live debugging
+To live debug the server in docker, if using VScode, go into debug.  A `launch.json` file will be created.  From there, remove json object from configuration array and copy in the following configuration:
+```
+{
+  "name": "Attach",
+  "type": "node",
+  "request": "attach",
+  "port": 9229,
+  "address": "localhost",
+  "restart": true,
+  "sourceMaps": false,
+  "localRoot": "${workspaceFolder}",
+  "remoteRoot": "/app",
+  "protocol": "inspector",
+  "outFiles": [
+    "${workspaceFolder}/dist/**/*js"
+  ]
+}
+```
+Within the `docker-compose-dev.yml` file, add ports `"9229:9229"`.  
+On the `package.json` add the `--inspect=0.0.0.0` flag to the dev/debug npm command.  This enables debugging.     
+For ex: `"debug": nodemon --inspect=0.0.0.0 ./server/app.js"`  
+When docker-compose is run in development, which defaults to the docker-compose-dev.yml, the server is run on port 9229 by default.  Once the containers are running, press play and add a break point anywhere in the code to be triggered.  For more info on live debugging in a docker environment, see [live debugging docker](https://blog.docker.com/2016/07/live-debugging-docker/)
 
 ## Using a corporate proxy
 When using a corporate proxy, docker becomes a little tricky.  It may be that you may only install npm packages inside a docker container.  In order to do so, `npm` proxies need to be added to the `Dockerfile`.  
